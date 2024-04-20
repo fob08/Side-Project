@@ -20,12 +20,19 @@ resource "aws_instance" "project1" {
 resource "aws_security_group" "project_security" {
   name = "project_security_group"
 
-  ingress = {
+  ingress = [
+    {
+    description = "This allow incoming traffics"
     from_port = var.server_port
     to_port = var.server_port
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = []
+    prefix_list_ids = []
+    security_groups = []
+    self = false
   }
+  ]
 }
 
 #this is needed to help specify how the autoscaling group will work
@@ -49,7 +56,7 @@ resource "aws_launch_configuration" "project_launch_config" {
 
 resource "aws_autoscaling_group" "project_autoscaling" {
   launch_configuration = aws_launch_configuration.project_launch_config.name
-  vpc_zone_identifier = data.aws_subnet.project_subnet.id
+  vpc_zone_identifier = data.aws_subnets.project_subnet.id
 
   target_group_arns = [aws_lb_target_group.project_target_group.arn]
   health_check_type = "ELB"
@@ -71,18 +78,18 @@ data "aws_vpc" "project_vpc" {
   default = true
 }
 
-data "aws_subnet" "project_subnet" {
+data "aws_subnets" "project_subnet" {
   filter {
     name = "vpc_id"
-    values = [data.aws_vpc.project_vpc.default.id]
+    values = [data.aws_vpc.project_vpc.id]
   }
 }
 
 #Application load balancer creation
 resource "aws_lb" "project_load_balancer" {
-  name = "project_lb"
+  name = "project-lb"
   load_balancer_type = "application"
-  subnets = data.aws_subnet.project_subnet.id
+  subnets = data.aws_subnets.project_subnet.ids
   security_groups = [aws_security_group.alb_security_group.id]
 }
 
@@ -108,19 +115,33 @@ resource "aws_lb_listener" "http" {
 resource "aws_security_group" "alb_security_group" {
   name = "project_alb_security_group"
 
-  ingress = {
+  ingress = [
+    {
+    description = "for all incoming traffics"
     from_port = var.lb_port
     to_port = var.lb_port
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = []
+    prefix_list_ids = []
+    security_groups = []
+    self = false
   }
+]
 
-  egress = {
+  egress = [
+    {
+    description = "for all outgoing traffics"
     from_port = 0
     to_port = 0
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = []
+    prefix_list_ids = []
+    security_groups = []
+    self = false
   }
+  ]
 }
 
 resource "aws_lb_target_group" "project_target_group" {

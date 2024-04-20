@@ -29,13 +29,6 @@ variable "lb_port" {
   default = 80
 }
 
-# s3 bucket name
-variable "bucket_prefix" {
-  type = string
-  description = "The prefix to be used for s3 bucket creation"
-  default = "s3-bucket"
-}
-
 variable "region" {
   type = string
   description = "AWS region name to create and manage resources in"
