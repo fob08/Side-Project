@@ -115,3 +115,20 @@ resource "aws_lb_listener" "http" {
   }
 
 }
+
+
+
+# creating RDS database instance
+resource "aws_db_instance" "default" {
+  allocated_storage = 10
+  engine = "mysql"
+  instance_class = "db.t3.micro"
+  username = "sideproject"
+  password = "sideproject"
+
+  vpc_security_group_ids = [aws_security_group.project_security]
+  db_subnet_group_name = aws_subnet.project_subnet.name
+
+
+  skip_final_snapshot = true // required to destroy
+}
