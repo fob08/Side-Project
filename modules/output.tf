@@ -1,4 +1,4 @@
 output "public_ip" {
-  value = aws_instance.project1.public_ip
-  description = "This is the public IP address utilized by my server"
+  value = aws_lb.project_load_balancer.dns_name
+  description = "This is the load balancer domain name"
 }
