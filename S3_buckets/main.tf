@@ -1,5 +1,5 @@
 provider "aws" {
-  region = var.region
+  region = "eu-central-1"
 }
 
 resource "aws_s3_bucket" "terraform_state" {
@@ -37,4 +37,16 @@ block_public_acls = true
 block_public_policy = true
 ignore_public_acls = true
 restrict_public_buckets = true
+}
+
+#This enables us to perrform terraform locking
+resource "aws_dynamodb_table" "terraform_locks" {
+    name = "project_state_terraform_locks"
+    billing_mode = "PAY_PER_REQUEST"
+    hash_key = "LockID"
+
+    attribute {
+        name = "LockID"
+        type = "S"
+    }
 }
