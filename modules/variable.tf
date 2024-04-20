@@ -1,3 +1,13 @@
+variable "access_key" {
+    description = "This is meant to store the access key used to access the aws platform"
+    type = string
+}
+
+variable "secret_key" {
+    description = "This is meant to store the access key used to access the aws platform"
+    type = string
+}
+
 variable "server_port" {
     description = "This is the port the server will be utilizing"
     type = number
