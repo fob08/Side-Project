@@ -1,10 +1,10 @@
 # creating RDS database instance
 resource "aws_db_instance" "default" {
-  allocated_storage = 10
-  storage_type = "gp2"
-  engine = "mysql"
-  engine_version = "5.7"
-  instance_class = "db.t3.micro"
+  allocated_storage = var.database.allocated_storage
+  storage_type = var.database.storage_type
+  engine = var.database.engine
+  engine_version = var.database.engine_version
+  instance_class = var.database.instance_class
 
 
   vpc_security_group_ids = [aws_security_group.project_security]
@@ -23,7 +23,7 @@ resource "aws_db_instance" "default" {
 
 # Define AWS IAM Role for RDS Monitoring
 resource "aws_iam_role" "rds_monitoring_role" {
-  name = "rds-monitoring-role"
+  name = var.role_name
 
   assume_role_policy = jsonencode({
   Version = "2012-10-17",
@@ -32,7 +32,7 @@ resource "aws_iam_role" "rds_monitoring_role" {
         Action = "sts:AssumeRole",
         Effect = "Allow",
         Principal = {
-        Service = "monitoring.rds.amazonaws.com"
+        Service = var.service_principal
       }
     }
   ]

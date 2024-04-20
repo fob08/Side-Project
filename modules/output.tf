@@ -3,7 +3,3 @@ output "public_ip" {
   description = "This is the load balancer domain name"
 }
 
-# The s3 bucket name derived from the prefix
-output "s3_bucket_name" {
-  value = aws_s3_bucket.bucket.id
-}

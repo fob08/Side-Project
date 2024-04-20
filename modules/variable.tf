@@ -75,3 +75,54 @@ variable "lifecycle_policy" {
   type        = string
   default     = null
 }
+
+# rds database variables
+variable "allocated_storage" {
+  description = "memory space allocated for database"
+  type = number
+}
+
+variable "database" {
+  type = object({
+    allocated_storage = string
+    storage_type = string
+    engine = string
+    engine_version = string
+    instance_class = string
+  })
+}
+
+variable "storage_type" {
+  description = "type of Amazon Elastic Block Store (EBS)"
+  type = string
+}
+
+variable "engine" {
+  description = "db type"
+  type = string
+}
+
+variable "engine_version" {
+  description = "The version of db engine to be used"
+  type = string
+}
+
+variable "lb_port" {
+  description = "The port for the load balancer"
+  type        = number
+}
+
+variable "role_name" {
+  description = "The name of the IAM role"
+  type = string
+}
+
+variable "service_principal" {
+  description = "The service principal for which to grant permissions"
+  type = string
+}
+
+variable "lb_port" {
+  description = "The port for the load balancer"
+  type        = number
+}
