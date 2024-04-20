@@ -90,3 +90,28 @@ data "aws_subnet" "project_subnet" {
   }
 }
 
+#Application load balancer creation
+resource "aws_lb" "project_load_balancer" {
+  name = "project_lb"
+  load_balancer_type = "application"
+  subnets = data.aws_subnet.project_subnet.id
+}
+
+#for every load balancer, there is a need for a listener
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.project_load_balancer.arn
+  port = var.lb_port
+  protocol = "HTTP"
+
+  #This returns a 404 error page
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "404: The page you are trying to access could not be found."
+      status_code = 404
+    }
+  }
+
+}

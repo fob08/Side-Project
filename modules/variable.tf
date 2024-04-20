@@ -13,3 +13,8 @@ variable "max_size" {
     type = number
     default = 10
 }
+
+variable "lb_port" {
+  type = number
+  default = 80
+}
