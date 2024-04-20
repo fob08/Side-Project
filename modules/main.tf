@@ -1,21 +1,3 @@
-terraform {
-  required_version = ">=1.0.1, <2.0.0"
-  required_providers {
-    aws = {
-        source = "hashicorp/aws"
-    version = "~> 4.0"
-    }
-
-  }
-}
-
-#This determine the region in which the application will be hosted
-provider "aws" {
-  region = "eu-central-1"
-  access_key = var.access_key
-  secret_key = var.secret_key
-}
-
 # This helps in creating an instance on aws 
 resource "aws_instance" "project1" {
   ami = "ami-0fb653ca2d3203ac1"
@@ -198,17 +180,3 @@ resource "aws_lb_listener_rule" "project_lb_listener" {
 
 
 
-# creating RDS database instance
-resource "aws_db_instance" "default" {
-  allocated_storage = 10
-  engine = "mysql"
-  instance_class = "db.t3.micro"
-  username = "sideproject"
-  password = "sideproject"
-
-  vpc_security_group_ids = [aws_security_group.project_security]
-  db_subnet_group_name = aws_subnet.project_subnet.name
-
-
-  skip_final_snapshot = true // required to destroy
-}
