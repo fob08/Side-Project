@@ -12,6 +12,8 @@ terraform {
 #This determine the region in which the application will be hosted
 provider "aws" {
   region = "eu-central-1"
+  access_key = var.access_key
+  secret_key = var.secret_key
 }
 
 # This helps in creating an instance on aws 
