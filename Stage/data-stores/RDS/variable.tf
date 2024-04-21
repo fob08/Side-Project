@@ -1,4 +1,8 @@
-
+variable "region" {
+  description = "This is the region used for staging purpose"
+  type = string
+  default = "eu-central-1"
+}
 variable "db_remote_state_bucket" {
 description = "The name of the S3 bucket for the database's remote state"
 type = string

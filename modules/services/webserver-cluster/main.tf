@@ -42,12 +42,12 @@ resource "aws_launch_configuration" "project_launch_config" {
     security_groups = [aws_security_group.project_security.id] #This is needed so that the EC2 can know wich security group to utilize
 
 #This is loaded when the EC2 instance is started
-    user_data = <<-EOF
+   /* user_data = <<-EOF
     #!/bin/bash
     echo "Hello, World" > index.html
     nohup busybox httpd -f -p ${var.server_port} &
     EOF
-
+*/
   #This is required when using a launch configuration with an autoscaling group
   lifecycle {
     create_before_destroy = true
@@ -178,5 +178,13 @@ resource "aws_lb_listener_rule" "project_lb_listener" {
   }
 }
 
-
+#This allows the app to read state file from the same s3 bucket and folder where the database stores its state
+data "terraform_remote_state" "db" {
+backend = "s3"
+config = {
+bucket = "project_terraform_state_file"
+key = "Stage/data-stores/RDS/terraform.tfstate"
+region = "eu-central-1"
+}
+}
 
