@@ -18,7 +18,7 @@ provider "aws" {
 
 # This helps in creating an instance on aws 
 resource "aws_instance" "project1" {
-  ami = "ami-0fb653ca2d3203ac1"
+  ami = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
   vpc_security_group_ids = [aws_security_group.project_security.id] #This is needed so that the EC2 can know wich security group to utilize
 
@@ -32,6 +32,23 @@ resource "aws_instance" "project1" {
   tags = {
     Name = "project_instance"
   }
+}
+
+#This block of code is to ensure that the ami is dynamically gotten irrespective of the region which the instance is launched.
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"]
 }
 
 #This creates the security group because without it, no traffic will flow in or out of the EC2 instance.
@@ -74,7 +91,7 @@ resource "aws_launch_configuration" "project_launch_config" {
 
 resource "aws_autoscaling_group" "project_autoscaling" {
   launch_configuration = aws_launch_configuration.project_launch_config.name
-  vpc_zone_identifier = data.aws_subnets.project_subnet.id
+  vpc_zone_identifier = data.aws_subnets.project_subnet.ids
 
   target_group_arns = [aws_lb_target_group.project_target_group.arn]
   health_check_type = "ELB"
@@ -98,7 +115,7 @@ data "aws_vpc" "project_vpc" {
 
 data "aws_subnets" "project_subnet" {
   filter {
-    name = "vpc_id"
+    name = "vpc-id"
     values = [data.aws_vpc.project_vpc.id]
   }
 }
