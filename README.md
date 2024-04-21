@@ -5,7 +5,7 @@ This project involves deploying infrastructure components. The initial scope inc
 ## Deployment Environments
 The infrastructure will be deployed to two environments:
 
-**Development (Dev):** Used for testing and development purposes.
+**Development (Dev):** Used for testing and development purposes.  
 **Production (Prod):** Production environment serving live traffic.
 
 # Tasks
