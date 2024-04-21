@@ -12,13 +12,13 @@ resource "aws_instance" "project1" {
   EOF
 
   tags = {
-    Name = "project_instance"
+    Name = "${var.cluster_name}-project_instance"
   }
 }
 
 #This creates the security group because without it, no traffic will flow in or out of the EC2 instance.
 resource "aws_security_group" "project_security" {
-  name = "project_security_group"
+  name = "${var.cluster_name}-project_security_group"
 
   ingress = [
     {
@@ -66,7 +66,7 @@ resource "aws_autoscaling_group" "project_autoscaling" {
 
   tag {
     key = "Name"
-    value = "Project_asg"
+    value = "${var.cluster_name}-Project_asg"
     propagate_at_launch = true
   }
 
@@ -87,7 +87,7 @@ data "aws_subnets" "project_subnet" {
 
 #Application load balancer creation
 resource "aws_lb" "project_load_balancer" {
-  name = "project-lb"
+  name = "${var.cluster_name}-project-lb"
   load_balancer_type = "application"
   subnets = data.aws_subnets.project_subnet.ids
   security_groups = [aws_security_group.alb_security_group.id]
@@ -113,7 +113,7 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_security_group" "alb_security_group" {
-  name = "project_alb_security_group"
+  name = "${var.cluster_name}-project_alb_security_group"
 
   ingress = [
     {
@@ -145,7 +145,7 @@ resource "aws_security_group" "alb_security_group" {
 }
 
 resource "aws_lb_target_group" "project_target_group" {
-  name = "project-target-group"
+  name = "${var.cluster_name}-project-target-group"
   port = var.server_port
   protocol = "HTTP"
   vpc_id = data.aws_vpc.project_vpc.id
