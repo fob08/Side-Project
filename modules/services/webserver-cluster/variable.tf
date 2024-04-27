@@ -14,25 +14,31 @@ variable "server_port" {
     default = 8080
 }
 
+locals {
+  http_port = 80
+  any_port = 0
+  any_protocol = "-1"
+  tcp_protocol = "tcp"
+  all_ips = ["0.0.0.0/0"]
+}
+variable "instance_type" {
+  description = "The type of EC2 Instances to run"
+  type = string
+}
 variable "min_size" {
+  description = "The minimum number of Ec2 instance in the ASG"
   type = number
-  default = 2
 }
 
 variable "max_size" {
+  description = "The maximum number of Ec2 instance in the ASG"
     type = number
-    default = 10
-}
-
-variable "lb_port" {
-  type = number
-  default = 80
 }
 
 variable "region" {
   type = string
   description = "AWS region name to create and manage resources in"
-#  default = "eu-central-1"
+  default = "eu-central-1"
 }
 
 variable "force_delete" {
@@ -83,5 +89,14 @@ variable "lb_port" {
 
 variable "cluster_name" {
 description = "The name to use for all the cluster resources"
+type = string
+}
+
+variable "db_remote_state_bucket" {
+description = "The name of the S3 bucket for the database's remote state"
+type = string
+}
+variable "db_remote_state_key" {
+description = "The path for the database's remote state in S3"
 type = string
 }

@@ -1,53 +1,21 @@
 # This helps in creating an instance on aws 
-resource "aws_instance" "project1" {
-  ami = "ami-0fb653ca2d3203ac1"
-  instance_type = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.project_security.id] #This is needed so that the EC2 can know wich security group to utilize
-
-#This is loaded when the EC2 instance is started
-  user_data = <<-EOF
-  #!/bin/bash
-  echo "Hello, World" > index.html
-  nohup busybox httpd -f -p ${var.server_port} &
-  EOF
-
-  tags = {
-    Name = "${var.cluster_name}-project_instance"
-  }
-}
 
 #This creates the security group because without it, no traffic will flow in or out of the EC2 instance.
 resource "aws_security_group" "project_security" {
   name = "${var.cluster_name}-project_security_group"
-
-  ingress = [
-    {
-    description = "This allow incoming traffics"
-    from_port = var.server_port
-    to_port = var.server_port
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = []
-    prefix_list_ids = []
-    security_groups = []
-    self = false
-  }
-  ]
 }
 
 #this is needed to help specify how the autoscaling group will work
 resource "aws_launch_configuration" "project_launch_config" {
     image_id = "ami-0fb653ca2d3203ac1"
-    instance_type = "t2.micro"
+    instance_type = var.instance_type
     security_groups = [aws_security_group.project_security.id] #This is needed so that the EC2 can know wich security group to utilize
-
-#This is loaded when the EC2 instance is started
-   /* user_data = <<-EOF
-    #!/bin/bash
-    echo "Hello, World" > index.html
-    nohup busybox httpd -f -p ${var.server_port} &
-    EOF
-*/
+  # Render the User Data script as a template
+    user_data = templatefile("${path.module}/user-data.sh", {
+    server_port = var.server_port
+    db_address = data.terraform_remote_state.db.outputs.address
+    db_port = data.terraform_remote_state.db.outputs.port
+})
   #This is required when using a launch configuration with an autoscaling group
   lifecycle {
     create_before_destroy = true
@@ -56,8 +24,7 @@ resource "aws_launch_configuration" "project_launch_config" {
 
 resource "aws_autoscaling_group" "project_autoscaling" {
   launch_configuration = aws_launch_configuration.project_launch_config.name
-  vpc_zone_identifier = data.aws_subnets.project_subnet.id
-
+  vpc_zone_identifier = data.aws_subnets.project_subnet.ids
   target_group_arns = [aws_lb_target_group.project_target_group.arn]
   health_check_type = "ELB"
 
@@ -66,7 +33,7 @@ resource "aws_autoscaling_group" "project_autoscaling" {
 
   tag {
     key = "Name"
-    value = "${var.cluster_name}-Project_asg"
+    value = var.cluster_name
     propagate_at_launch = true
   }
 
@@ -80,7 +47,7 @@ data "aws_vpc" "project_vpc" {
 
 data "aws_subnets" "project_subnet" {
   filter {
-    name = "vpc_id"
+    name = "vpc-id"
     values = [data.aws_vpc.project_vpc.id]
   }
 }
@@ -96,7 +63,7 @@ resource "aws_lb" "project_load_balancer" {
 #for every load balancer, there is a need for a listener
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.project_load_balancer.arn
-  port = var.lb_port
+  port = local.http_port
   protocol = "HTTP"
 
   #This returns a 404 error page
@@ -114,36 +81,25 @@ resource "aws_lb_listener" "http" {
 
 resource "aws_security_group" "alb_security_group" {
   name = "${var.cluster_name}-project_alb_security_group"
-
-  ingress = [
-    {
-    description = "for all incoming traffics"
-    from_port = var.lb_port
-    to_port = var.lb_port
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = []
-    prefix_list_ids = []
-    security_groups = []
-    self = false
-  }
-]
-
-  egress = [
-    {
-    description = "for all outgoing traffics"
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = []
-    prefix_list_ids = []
-    security_groups = []
-    self = false
-  }
-  ]
 }
+resource "aws_security_group_rule" "allow_http_inbound" {
+  type = "ingress"
+  security_group_id = aws_security_group.alb_security_group.id
+  from_port = local.http_port
+  to_port = local.http_port
+  protocol = local.tcp_protocol
+  cidr_blocks = local.all_ips
+  }
 
+  #this resource define the outbond rule
+resource "aws_security_group_rule" "allow_all_outbound" {
+  type = "egress"
+  security_group_id = aws_security_group.alb_security_group.id
+  from_port = local.any_port
+  to_port = local.any_port
+  protocol = local.any_protocol
+  cidr_blocks = local.all_ips
+  }
 resource "aws_lb_target_group" "project_target_group" {
   name = "${var.cluster_name}-project-target-group"
   port = var.server_port
@@ -182,8 +138,8 @@ resource "aws_lb_listener_rule" "project_lb_listener" {
 data "terraform_remote_state" "db" {
 backend = "s3"
 config = {
-bucket = "project_terraform_state_file"
-key = "Stage/data-stores/RDS/terraform.tfstate"
+bucket = var.db_remote_state_bucket
+key = var.db_remote_state_key
 region = "eu-central-1"
 }
 }
